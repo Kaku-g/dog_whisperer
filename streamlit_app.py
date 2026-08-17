@@ -357,8 +357,9 @@ def pet_log_tab():
 
     weight_trend = sfl.get_weight_trend(pet_id)
     food_trend = sfl.daily_food_total(pet_id)
+    walk_trend = sfl.daily_walk_total(pet_id)
 
-    m1, m2, m3 = st.columns(3)
+    m1, m2, m3, m4 = st.columns(4)
     m1.metric("Latest weight", f"{weight_trend[-1]['weight_kg']:.1f} kg" if weight_trend else "—")
     if food_trend:
         avg_food = sum(r["total_grams"] or 0 for r in food_trend) / len(food_trend)
@@ -366,6 +367,11 @@ def pet_log_tab():
     else:
         m2.metric("Avg. daily food", "—")
     m3.metric("Meals logged (7d)", len(sfl.get_meal_logs(pet_id, days=7)))
+    if walk_trend:
+        total_walks = sum(r["walk_count"] or 0 for r in walk_trend)
+        m4.metric("Walks logged (7d)", int(total_walks))
+    else:
+        m4.metric("Walks logged (7d)", 0)
 
     with st.container(border=True):
         if weight_trend:
@@ -381,11 +387,24 @@ def pet_log_tab():
         else:
             st.caption("No meal entries yet.")
 
+    with st.container(border=True):
+        if walk_trend:
+            st.caption("Daily walk duration (minutes)")
+            st.bar_chart({str(row["log_date"]): row["total_duration"] for row in walk_trend})
+        else:
+            st.caption("No walk entries yet.")
+
     recent_meals = sfl.get_meal_logs(pet_id, days=7)
     if recent_meals:
         with st.container(border=True):
             st.caption("Last 7 days of meals")
             st.table(recent_meals)
+
+    recent_walks = sfl.get_walk_logs(pet_id, days=7)
+    if recent_walks:
+        with st.container(border=True):
+            st.caption("Last 7 days of walks")
+            st.table(recent_walks)
 
 
 def main():

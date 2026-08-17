@@ -143,7 +143,7 @@ def log_weight(pet_id: str, weight_kg: float) -> None:
 
 
 def log_walk(pet_id: str, duration_min: float, notes: str = None) -> None:
-    """Log a walk for a pet."""
+    """Log a walk for a pet. Clears related caches."""
     conn = get_connection()
     cur = conn.cursor()
     cur.execute(
@@ -151,6 +151,10 @@ def log_walk(pet_id: str, duration_min: float, notes: str = None) -> None:
         (pet_id, duration_min, notes),
     )
     conn.commit()
+    # Clear cache for this pet's walk trends
+    get_walk_trend.clear()
+    daily_walk_total.clear()
+    get_walk_logs.clear()
 
 
 @st.cache_data
@@ -206,3 +210,59 @@ def daily_food_total(pet_id: str, days: int = 7) -> list:
         (pet_id, days),
     )
     return [{"log_date": r[0], "total_grams": r[1]} for r in cur.fetchall()]
+
+
+@st.cache_data
+def get_walk_logs(pet_id: str, days: int = 7) -> list:
+    """Get recent walk logs. Cached per pet_id and days."""
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(
+        """
+        SELECT logged_at, duration_min, notes FROM walk_logs
+        WHERE pet_id = %s AND logged_at >= DATEADD(day, -%s, CURRENT_TIMESTAMP())
+        ORDER BY logged_at DESC
+        """,
+        (pet_id, days),
+    )
+    return [
+        {"logged_at": r[0], "duration_min": r[1], "notes": r[2]}
+        for r in cur.fetchall()
+    ]
+
+
+@st.cache_data
+def get_walk_trend(pet_id: str, days: int = 30) -> list:
+    """Get walk history over time. Cached per pet_id and days."""
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(
+        """
+        SELECT logged_at, duration_min FROM walk_logs
+        WHERE pet_id = %s AND logged_at >= DATEADD(day, -%s, CURRENT_TIMESTAMP())
+        ORDER BY logged_at ASC
+        """,
+        (pet_id, days),
+    )
+    return [{"logged_at": r[0], "duration_min": r[1]} for r in cur.fetchall()]
+
+
+@st.cache_data
+def daily_walk_total(pet_id: str, days: int = 7) -> list:
+    """Get daily walk totals for charting. Cached per pet_id and days."""
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(
+        """
+        SELECT
+            DATE(logged_at) AS log_date,
+            SUM(duration_min) AS total_duration,
+            COUNT(*) AS walk_count
+        FROM walk_logs
+        WHERE pet_id = %s AND logged_at >= DATEADD(day, -%s, CURRENT_TIMESTAMP())
+        GROUP BY DATE(logged_at)
+        ORDER BY log_date ASC
+        """,
+        (pet_id, days),
+    )
+    return [{"log_date": r[0], "total_duration": r[1], "walk_count": r[2]} for r in cur.fetchall()]
