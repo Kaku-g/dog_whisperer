@@ -42,55 +42,55 @@ def init_schema() -> None:
     cur.execute(f"CREATE DATABASE IF NOT EXISTS {SF_DATABASE}")
     cur.execute(f"CREATE SCHEMA IF NOT EXISTS {SF_DATABASE}.{SF_SCHEMA}")
 
-        cur.execute("""
-            CREATE TABLE IF NOT EXISTS pets (
-                pet_id       STRING DEFAULT UUID_STRING(),
-                owner_id     STRING NOT NULL DEFAULT 'anonymous',
-                name         STRING NOT NULL,
-                species      STRING DEFAULT 'dog',
-                breed        STRING,
-                created_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP(),
-                PRIMARY KEY (pet_id)
-            )
-        """)
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS pets (
+            pet_id       STRING DEFAULT UUID_STRING(),
+            owner_id     STRING NOT NULL DEFAULT 'anonymous',
+            name         STRING NOT NULL,
+            species      STRING DEFAULT 'dog',
+            breed        STRING,
+            created_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP(),
+            PRIMARY KEY (pet_id)
+        )
+    """)
 
-        cur.execute("""
-            CREATE TABLE IF NOT EXISTS meal_logs (
-                log_id       STRING DEFAULT UUID_STRING(),
-                pet_id       STRING NOT NULL,
-                food_item    STRING NOT NULL,
-                amount_grams FLOAT,
-                notes        STRING,
-                logged_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP(),
-                PRIMARY KEY (log_id),
-                FOREIGN KEY (pet_id) REFERENCES pets (pet_id)
-            )
-        """)
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS meal_logs (
+            log_id       STRING DEFAULT UUID_STRING(),
+            pet_id       STRING NOT NULL,
+            food_item    STRING NOT NULL,
+            amount_grams FLOAT,
+            notes        STRING,
+            logged_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP(),
+            PRIMARY KEY (log_id),
+            FOREIGN KEY (pet_id) REFERENCES pets (pet_id)
+        )
+    """)
 
-        cur.execute("""
-            CREATE TABLE IF NOT EXISTS weight_logs (
-                log_id       STRING DEFAULT UUID_STRING(),
-                pet_id       STRING NOT NULL,
-                weight_kg    FLOAT NOT NULL,
-                logged_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP(),
-                PRIMARY KEY (log_id),
-                FOREIGN KEY (pet_id) REFERENCES pets (pet_id)
-            )
-        """)
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS weight_logs (
+            log_id       STRING DEFAULT UUID_STRING(),
+            pet_id       STRING NOT NULL,
+            weight_kg    FLOAT NOT NULL,
+            logged_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP(),
+            PRIMARY KEY (log_id),
+            FOREIGN KEY (pet_id) REFERENCES pets (pet_id)
+        )
+    """)
 
-        cur.execute("""
-            CREATE TABLE IF NOT EXISTS walk_logs (
-                log_id       STRING DEFAULT UUID_STRING(),
-                pet_id       STRING NOT NULL,
-                duration_min FLOAT NOT NULL,
-                notes        STRING,
-                logged_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP(),
-                PRIMARY KEY (log_id),
-                FOREIGN KEY (pet_id) REFERENCES pets (pet_id)
-            )
-        """)
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS walk_logs (
+            log_id       STRING DEFAULT UUID_STRING(),
+            pet_id       STRING NOT NULL,
+            duration_min FLOAT NOT NULL,
+            notes        STRING,
+            logged_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP(),
+            PRIMARY KEY (log_id),
+            FOREIGN KEY (pet_id) REFERENCES pets (pet_id)
+        )
+    """)
 
-        conn.commit()
+    conn.commit()
 
 
 @st.cache_data
